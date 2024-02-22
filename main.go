@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -11,9 +11,9 @@ import (
 	"time"
 )
 
-const (
+var (
 	checkURL          = os.Getenv("CHECK_URL")
-	checkInterval     = time.Duration(os.Getenv("CHECK_INTERVAL")) * time.Minute
+	checkInterval     = 15 * time.Minute
 	telegramAPIKeyVar = os.Getenv("TELEGRAM_API_KEY")
 	chatID            = os.Getenv("CHAT_ID")
 	textToCheck       = os.Getenv("TEXT_TO_CHECK")
@@ -27,7 +27,7 @@ func fetchPageContent(url string) (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -42,7 +42,7 @@ func sendMessage(message string) error {
 	}
 	defer response.Body.Close()
 	// Optionally, you can read and log the response from Telegram
-	body, _ := ioutil.ReadAll(response.Body)
+	body, _ := io.ReadAll(response.Body)
 	fmt.Println("Response from Telegram: ", string(body))
 	return nil
 }
@@ -64,6 +64,15 @@ func checkPageForText() {
 }
 
 func main() {
+	if os.Getenv("CHECK_INTERVAL") != "" {
+		checkIntervalD, err := time.ParseDuration(os.Getenv("CHECK_INTERVAL"))
+		if err != nil {
+			log.Printf("Error parsing CHECK_INTERVAL: %v", err)
+		} else {
+			checkInterval = checkIntervalD
+		}
+	}
+
 	ticker := time.NewTicker(checkInterval)
 	defer ticker.Stop()
 
