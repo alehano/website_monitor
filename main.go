@@ -42,7 +42,10 @@ func sendMessage(message string) error {
 	}
 	defer response.Body.Close()
 	// Optionally, you can read and log the response from Telegram
-	body, _ := io.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
 	fmt.Println("Response from Telegram: ", string(body))
 	return nil
 }
@@ -59,7 +62,7 @@ func checkPageForText() {
 			log.Printf("Error sending message: %v", err)
 		}
 	} else {
-		log.Println("The specified text is still on the page. No action taken.")
+		log.Println("Condition not met")
 	}
 }
 
