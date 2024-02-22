@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -46,7 +46,7 @@ func fetchPageContent(url string) (string, error) {
 	defer resp.Body.Close()
 
 	// Read the response body
-	body, err := io.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -62,7 +62,7 @@ func sendMessage(message string) error {
 	}
 	defer response.Body.Close()
 	// Optionally, you can read and log the response from Telegram
-	body, err := io.ReadAll(response.Body)
+	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return err
 	}
