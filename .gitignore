@@ -1,4 +1,5 @@
 website_monitor
+docker-compose.yml
 .env
 .DS_Store
 *.[56789ao]

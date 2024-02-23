@@ -20,6 +20,10 @@ var (
 	textToCheck       = os.Getenv("TEXT_TO_CHECK")
 	shouldContain     = os.Getenv("SHOULD_CONTAIN") == "true"
 	alertMessage      = os.Getenv("ALERT_MESSAGE")
+	cookieName        = os.Getenv("COOKIE_NAME")
+	cookieValue       = os.Getenv("COOKIE_VALUE")
+	username          = os.Getenv("BASIC_AUTH_USERNAME")
+	password          = os.Getenv("BASIC_AUTH_PASSWORD")
 )
 
 func fetchPageContent(url string) (string, error) {
@@ -37,6 +41,16 @@ func fetchPageContent(url string) (string, error) {
 	req.Header.Add("DNT", "1")
 	req.Header.Add("Connection", "keep-alive")
 	req.Header.Add("Upgrade-Insecure-Requests", "1")
+
+	// Add cookies to the request
+	if cookieName != "" && cookieValue != "" {
+		req.AddCookie(&http.Cookie{Name: cookieName, Value: cookieValue})
+	}
+
+	// Add Basic Authentication to the request
+	if username != "" && password != "" {
+		req.SetBasicAuth(username, password)
+	}
 
 	// Send the request
 	resp, err := http.DefaultClient.Do(req)
