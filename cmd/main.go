@@ -25,6 +25,7 @@ var (
 	cookies           = os.Getenv("COOKIES") // "cookie1=value1; cookie2=value2"
 	username          = os.Getenv("BASIC_AUTH_USERNAME")
 	password          = os.Getenv("BASIC_AUTH_PASSWORD")
+	disHeaders        = os.Getenv("DISABLE_ADDITIONAL_HEADERS")
 )
 
 func fetchPageContent(url string) (string, error) {
@@ -35,13 +36,13 @@ func fetchPageContent(url string) (string, error) {
 	}
 
 	// Add headers to the request
-	req.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
-	req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
-	req.Header.Add("Accept-Encoding", "gzip, deflate, br")
-	req.Header.Add("Accept-Language", "en-US,en;q=0.5")
-	req.Header.Add("DNT", "1")
-	req.Header.Add("Connection", "keep-alive")
-	req.Header.Add("Upgrade-Insecure-Requests", "1")
+	if disHeaders != "true" {
+		req.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
+		req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+		req.Header.Add("Accept-Encoding", "gzip, deflate, br")
+		req.Header.Add("Accept-Language", "en,ru;q=0.9")
+		req.Header.Add("Cache-Control", "no-cache")
+	}
 
 	// Add cookies to the request
 	setCookies(req, cookies)
@@ -91,22 +92,6 @@ func sendMessage(message string, botToken string, chatId string) error {
 	return nil
 }
 
-// func sendMessage(message string) error {
-// 	baseURL := "https://api.telegram.org/bot" + telegramAPIKeyVar + "/sendMessage"
-// 	response, err := http.PostForm(baseURL, url.Values{"chat_id": {chatID}, "text": {message}})
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer response.Body.Close()
-// 	// Optionally, you can read and log the response from Telegram
-// 	body, err := ioutil.ReadAll(response.Body)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	fmt.Println("Response from Telegram: ", string(body))
-// 	return nil
-// }
-
 func checkPageForText() {
 	content, err := fetchPageContent(checkURL)
 	if err != nil {
@@ -114,6 +99,7 @@ func checkPageForText() {
 		return
 	}
 	if (mustContain && strings.Contains(content, textToCheck)) || (!mustContain && !strings.Contains(content, textToCheck)) {
+		log.Println("ALERT: Condition met")
 		err := sendMessage(alertMessage, telegramAPIKeyVar, chatID)
 		if err != nil {
 			log.Printf("Error sending message: %v", err)

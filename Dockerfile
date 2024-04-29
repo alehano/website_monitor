@@ -12,7 +12,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -v -o website_monitor
 
 # Use a Docker multi-stage build to create a lean production image.
 # (Note: 'scratch' gives you a very minimal environment)
-FROM scratch
+FROM alpine:latest
 
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /go/src/app/website_monitor /website_monitor
