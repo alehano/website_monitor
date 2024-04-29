@@ -2,15 +2,16 @@ package main
 
 import (
 	"crypto/tls"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
-	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 var (
@@ -72,21 +73,39 @@ func fetchPageContent(url string) (string, error) {
 	return string(body), nil
 }
 
-func sendMessage(message string) error {
-	baseURL := "https://api.telegram.org/bot" + telegramAPIKeyVar + "/sendMessage"
-	response, err := http.PostForm(baseURL, url.Values{"chat_id": {chatID}, "text": {message}})
+func sendMessage(message string, botToken string, chatId string) error {
+	// Set the receiver Chat ID here
+	chatIDint, err := strconv.Atoi(chatId)
 	if err != nil {
 		return err
 	}
-	defer response.Body.Close()
-	// Optionally, you can read and log the response from Telegram
-	body, err := ioutil.ReadAll(response.Body)
+	bot, err := tgbotapi.NewBotAPI(botToken)
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
-	fmt.Println("Response from Telegram: ", string(body))
+	msg := tgbotapi.NewMessage(int64(chatIDint), message)
+	_, err = bot.Send(msg)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return nil
 }
+
+// func sendMessage(message string) error {
+// 	baseURL := "https://api.telegram.org/bot" + telegramAPIKeyVar + "/sendMessage"
+// 	response, err := http.PostForm(baseURL, url.Values{"chat_id": {chatID}, "text": {message}})
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer response.Body.Close()
+// 	// Optionally, you can read and log the response from Telegram
+// 	body, err := ioutil.ReadAll(response.Body)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	fmt.Println("Response from Telegram: ", string(body))
+// 	return nil
+// }
 
 func checkPageForText() {
 	content, err := fetchPageContent(checkURL)
@@ -95,7 +114,7 @@ func checkPageForText() {
 		return
 	}
 	if (mustContain && strings.Contains(content, textToCheck)) || (!mustContain && !strings.Contains(content, textToCheck)) {
-		err := sendMessage(alertMessage)
+		err := sendMessage(alertMessage, telegramAPIKeyVar, chatID)
 		if err != nil {
 			log.Printf("Error sending message: %v", err)
 		}
