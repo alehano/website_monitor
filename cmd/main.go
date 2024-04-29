@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -20,8 +21,7 @@ var (
 	textToCheck       = os.Getenv("TEXT_TO_CHECK")
 	shouldContain     = os.Getenv("SHOULD_CONTAIN") == "true"
 	alertMessage      = os.Getenv("ALERT_MESSAGE")
-	cookieName        = os.Getenv("COOKIE_NAME")
-	cookieValue       = os.Getenv("COOKIE_VALUE")
+	cookies           = os.Getenv("COOKIES") // "cookie1=value1; cookie2=value2"
 	username          = os.Getenv("BASIC_AUTH_USERNAME")
 	password          = os.Getenv("BASIC_AUTH_PASSWORD")
 )
@@ -43,17 +43,21 @@ func fetchPageContent(url string) (string, error) {
 	req.Header.Add("Upgrade-Insecure-Requests", "1")
 
 	// Add cookies to the request
-	if cookieName != "" && cookieValue != "" {
-		req.AddCookie(&http.Cookie{Name: cookieName, Value: cookieValue})
-	}
+	setCookies(req, cookies)
 
 	// Add Basic Authentication to the request
 	if username != "" && password != "" {
 		req.SetBasicAuth(username, password)
 	}
 
+	// Create a custom HTTP client with TLS configuration
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+
 	// Send the request
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -97,6 +101,20 @@ func checkPageForText() {
 		}
 	} else {
 		log.Println("Condition not met")
+	}
+}
+
+func setCookies(req *http.Request, cookieString string) {
+	if cookieString == "" {
+		return
+	}
+	// Add cookies to the request
+	cookies := strings.Split(cookieString, ";")
+	for _, cookie := range cookies {
+		cookieParts := strings.SplitN(strings.TrimSpace(cookie), "=", 2)
+		if len(cookieParts) == 2 {
+			req.AddCookie(&http.Cookie{Name: cookieParts[0], Value: cookieParts[1]})
+		}
 	}
 }
 

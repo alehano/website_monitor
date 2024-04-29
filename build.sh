@@ -1,9 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 
-# Set the target OS and architecture
-# GOOS=linux GOARCH=arm go build -o website_monitor
-GOOS=linux GOARCH=amd go build -o website_monitor
 
-go build -o website_monitor
-
-echo "Build complete."
+# docker buildx create --name mybuilder --use
+docker buildx use mybuilder
+docker buildx build --platform linux/amd64,linux/arm64 -t akhalyapin/website_monitor:latest --push .
