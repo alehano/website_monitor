@@ -19,7 +19,7 @@ var (
 	telegramAPIKeyVar = os.Getenv("TELEGRAM_API_KEY")
 	chatID            = os.Getenv("CHAT_ID")
 	textToCheck       = os.Getenv("TEXT_TO_CHECK")
-	shouldContain     = os.Getenv("SHOULD_CONTAIN") == "true"
+	mustContain       = os.Getenv("MUST_CONTAIN") == "true"
 	alertMessage      = os.Getenv("ALERT_MESSAGE")
 	cookies           = os.Getenv("COOKIES") // "cookie1=value1; cookie2=value2"
 	username          = os.Getenv("BASIC_AUTH_USERNAME")
@@ -94,7 +94,7 @@ func checkPageForText() {
 		log.Printf("Error fetching page content: %v", err)
 		return
 	}
-	if (shouldContain && strings.Contains(content, textToCheck)) || (!shouldContain && !strings.Contains(content, textToCheck)) {
+	if (mustContain && strings.Contains(content, textToCheck)) || (!mustContain && !strings.Contains(content, textToCheck)) {
 		err := sendMessage(alertMessage)
 		if err != nil {
 			log.Printf("Error sending message: %v", err)
